@@ -1,0 +1,26 @@
+Mac Automator
+
+1. Workflow receives - folders 
+in - Finder
+
+2. Get Specified Finder Items
+
+3. Run Shell Script
+    Shell: /bin/bash
+    Pass input: as arguments
+
+4. Run Shell Script
+math() {
+    echo "$*" | bc -l
+}
+round() {
+    printf "%.${2:-0}f" "$1"
+}
+
+find "$@"/ -not -type d -maxdepth 1 -iname "*.mp4" -print0 | while IFS= read -r -d $'\0' fileName ; do {
+	d=$(/usr/local/bin/ffprobe -v quiet -select_streams v:0 -show_entries stream=duration -of default=noprint_wrappers=1:nokey=1 "$fileName")
+	n="$(round $(math "$d/2") 2)";
+	/usr/local/bin/ffmpeg -i "$fileName" -y -vframes 1 -s 800x600 -ss "$n" "$fileName".jpg
+	echo "$fileName"
+};
+done;
